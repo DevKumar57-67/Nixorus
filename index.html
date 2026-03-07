@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Box Shooter Game</title>
+<title>Box Shooter Game V2</title>
 
 <style>
 body{
@@ -12,7 +12,6 @@ font-family:Arial;
 }
 
 canvas{
-background:#222;
 border:3px solid white;
 }
 
@@ -24,6 +23,7 @@ button{
 font-size:20px;
 padding:15px;
 margin:5px;
+cursor:pointer;
 }
 </style>
 
@@ -31,7 +31,7 @@ margin:5px;
 
 <body>
 
-<h2> Yellow = Coins |  Orange = Enemies</h2>
+<h2>🟡 Yellow = Coins | 🟠 Orange = Enemies</h2>
 <p>Arrow Keys / Buttons to move | Space or Shoot Button</p>
 
 <h3>Score: <span id="score">0</span></h3>
@@ -40,12 +40,20 @@ margin:5px;
 <canvas id="gameCanvas" width="700" height="400"></canvas>
 
 <div class="controls">
-<button onclick="moveUp()">Up</button><br>
-<button onclick="moveLeft()">Left</button>
+
+<button onmousedown="moveUp()" onmouseup="stopMove()">Up</button><br>
+
+<button onmousedown="moveLeft()" onmouseup="stopMove()">Left</button>
 <button onclick="shoot()">Shoot</button>
-<button onclick="moveRight()">Right</button><br>
-<button onclick="moveDown()">Down</button>
+<button onmousedown="moveRight()" onmouseup="stopMove()">Right</button><br>
+
+<button onmousedown="moveDown()" onmouseup="stopMove()">Down</button>
+
 </div>
+
+<audio id="bgMusic" loop preload="auto">
+<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3" type="audio/mpeg">
+</audio>
 
 <script>
 
@@ -74,25 +82,23 @@ let hitSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plan
 
 let keys = {};
 
-for(let i=0;i<4;i++){
+let buttonMove = {
+up:false,
+down:false,
+left:false,
+right:false
+};
 
-enemies.push({
-x:canvas.width + Math.random()*400,
-y:Math.random()*(canvas.height-40),
-size:40
-});
+const music = document.getElementById("bgMusic");
 
+document.body.addEventListener("click",function(){
+
+if(music.paused){
+music.volume = 0.3;
+music.play();
 }
 
-for(let i=0;i<3;i++){
-
-coins.push({
-x:canvas.width + Math.random()*600,
-y:Math.random()*(canvas.height-30),
-size:25
 });
-
-}
 
 document.addEventListener("keydown",function(e){
 
@@ -108,10 +114,17 @@ document.addEventListener("keyup",function(e){
 keys[e.key]=false;
 });
 
-function moveUp(){player.y-=player.speed}
-function moveDown(){player.y+=player.speed}
-function moveLeft(){player.x-=player.speed}
-function moveRight(){player.x+=player.speed}
+function moveUp(){ buttonMove.up=true }
+function moveDown(){ buttonMove.down=true }
+function moveLeft(){ buttonMove.left=true }
+function moveRight(){ buttonMove.right=true }
+
+function stopMove(){
+buttonMove.up=false
+buttonMove.down=false
+buttonMove.left=false
+buttonMove.right=false
+}
 
 function shoot(){
 
@@ -128,10 +141,10 @@ speed:8
 
 function movePlayer(){
 
-if(keys["ArrowUp"]) player.y-=player.speed;
-if(keys["ArrowDown"]) player.y+=player.speed;
-if(keys["ArrowLeft"]) player.x-=player.speed;
-if(keys["ArrowRight"]) player.x+=player.speed;
+if(keys["ArrowUp"] || buttonMove.up) player.y -= player.speed;
+if(keys["ArrowDown"] || buttonMove.down) player.y += player.speed;
+if(keys["ArrowLeft"] || buttonMove.left) player.x -= player.speed;
+if(keys["ArrowRight"] || buttonMove.right) player.x += player.speed;
 
 }
 
@@ -263,9 +276,60 @@ coin.x=canvas.width+Math.random()*500;
 
 }
 
+let stars=[];
+
+for(let i=0;i<120;i++){
+
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+size:Math.random()*2
+});
+
+}
+
+function drawBackground(){
+
+let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+
+gradient.addColorStop(0,"#0f2027");
+gradient.addColorStop(0.5,"#203a43");
+gradient.addColorStop(1,"#2c5364");
+
+ctx.fillStyle = gradient;
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="white";
+
+stars.forEach(s=>{
+ctx.fillRect(s.x,s.y,s.size,s.size);
+});
+
+}
+
+for(let i=0;i<4;i++){
+
+enemies.push({
+x:canvas.width + Math.random()*400,
+y:Math.random()*(canvas.height-40),
+size:40
+});
+
+}
+
+for(let i=0;i<3;i++){
+
+coins.push({
+x:canvas.width + Math.random()*600,
+y:Math.random()*(canvas.height-30),
+size:25
+});
+
+}
+
 function draw(){
 
-ctx.clearRect(0,0,canvas.width,canvas.height);
+drawBackground();
 
 ctx.fillStyle="blue";
 ctx.fillRect(player.x,player.y,player.size,player.size);
